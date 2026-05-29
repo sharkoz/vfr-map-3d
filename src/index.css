@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+/* ── Layout reset ────────────────────────────────────────────────────────── */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #070c14;
+}
+
+/* MapLibre canvas */
+.maplibregl-canvas { display: block; }
+
+/* MapLibre attribution dark */
+.maplibregl-ctrl-attrib {
+  background: rgba(7, 12, 20, 0.75) !important;
+  color: #4a6585 !important;
+}
+.maplibregl-ctrl-attrib a { color: #5a7a9a !important; }
+
+/* MapLibre nav controls dark */
+.maplibregl-ctrl-group {
+  background: rgba(13, 22, 40, 0.92) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(42, 68, 100, 0.6) !important;
+  border-radius: 10px !important;
+  overflow: hidden;
+}
+.maplibregl-ctrl-group button {
+  background: transparent !important;
+  color: #7a9ab8 !important;
+}
+.maplibregl-ctrl-group button:hover { background: rgba(255,255,255,0.06) !important; }
+.maplibregl-ctrl-group button + button {
+  border-top: 1px solid rgba(42, 68, 100, 0.4) !important;
+}
+
+/* ── Design tokens ───────────────────────────────────────────────────────── */
+:root {
+  --font-display: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --font-data:    'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+}
+
+/* ── Typography utilities ────────────────────────────────────────────────── */
+.font-display { font-family: var(--font-display); }
+.font-data    { font-family: var(--font-data); }
+
+/* ── Custom scrollbar (dark) ─────────────────────────────────────────────── */
+.scrollbar-dark { scrollbar-width: thin; scrollbar-color: #2a4464 transparent; }
+.scrollbar-dark::-webkit-scrollbar       { width: 3px; }
+.scrollbar-dark::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-dark::-webkit-scrollbar-thumb { background: #2a4464; border-radius: 2px; }
+
+/* ── Range slider — amber ────────────────────────────────────────────────── */
+.slider-amber {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: #1e3050;
+  outline: none;
+  cursor: pointer;
+}
+.slider-amber::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #f0a020;
+  border-radius: 50%;
+  border: 2px solid #0d1628;
+  box-shadow: 0 0 8px rgba(240, 160, 32, 0.55);
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+.slider-amber:hover::-webkit-slider-thumb {
+  box-shadow: 0 0 14px rgba(240, 160, 32, 0.8);
+}
+.slider-amber::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: #f0a020;
+  border-radius: 50%;
+  border: 2px solid #0d1628;
+  box-shadow: 0 0 8px rgba(240, 160, 32, 0.55);
+  cursor: pointer;
+}
+.slider-amber::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: #1e3050;
+}
+
+/* ── Panel glass surface ─────────────────────────────────────────────────── */
+.panel-glass {
+  background: rgba(13, 22, 40, 0.96);
+  backdrop-filter: blur(12px) saturate(1.2);
+  border: 1px solid rgba(42, 68, 100, 0.5);
+}
+
+/* ── Ping animation (GPS marker) ─────────────────────────────────────────── */
+@keyframes gps-ping {
+  0%   { transform: scale(1);   opacity: 0.7; }
+  70%  { transform: scale(2.2); opacity: 0;   }
+  100% { transform: scale(2.2); opacity: 0;   }
+}
+
+/* ── Zone bar entrance animation ────────────────────────────────────────── */
+@keyframes bar-rise {
+  from { transform: scaleY(0); opacity: 0; }
+  to   { transform: scaleY(1); opacity: 1; }
+}
+.chart-bar-animated {
+  transform-origin: bottom;
+  animation: bar-rise 0.3s cubic-bezier(.34,1.56,.64,1) both;
+}
