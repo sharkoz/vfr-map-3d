@@ -5,7 +5,7 @@ import { useGeolocation } from './useGeolocation'
 // Mock du store Zustand
 vi.mock('@/store', () => ({
   useAppStore: vi.fn((selector) => {
-    const state = { setUserPosition: vi.fn() }
+    const state = { setUserPosition: vi.fn(), setGpsMotion: vi.fn() }
     return selector(state)
   }),
 }))

@@ -8,8 +8,8 @@
 ## 🔖 Session en cours
 
 **Dernière session :** 2026-05-29  
-**Statut :** Phase 5.2 complète — 158 tests ✅ — Build OK  
-**Prochaine tâche :** Phase 5.1 — Filtre altitudinal (slider altitude max) — voir aussi le `userCeiling` déjà en place dans LayerControl
+**Statut :** Phases 5.1, 5.2, 5.4 complètes — 171 tests ✅ — Build OK  
+**Prochaine tâche :** Phase 4.2 — NotamOverlay (affichage NOTAM sur la carte) ou Phase 5.5 — code splitting (chunk > 500 kB)
 
 ---
 
@@ -168,11 +168,11 @@
 
 ## Phase 5 — Fonctionnalités avancées & Polish
 
-### 5.1 Filtre altitudinal
-- [ ] Slider "altitude max" (ex: 500ft → 5000ft)
-- [ ] Masquer les zones dont le plancher est au-dessus de l'altitude sélectionnée
-- [ ] Affichage par défaut adapté ULM (< 1000ft AGL → zones pertinentes)
-- [ ] **Test :** filtre altitude masque correctement les zones
+### 5.1 Filtre altitudinal ✅ (implémenté via `userCeiling`)
+- [x] Slider "altitude max" — slider "Plafond carte" 500 ft → FL195 dans LayerControl
+- [x] Masquer les zones dont le plancher est au-dessus — `buildMapFilter` : `_floorFt < userCeiling`
+- [x] Affichage par défaut adapté ULM — défaut 3500 ft (couvre zones basses + CTR/TMA bas)
+- [x] **Test :** filtre altitude masque les zones (Map.test « intègre le plafond utilisateur ») + slider (LayerControl.test)
 
 ### 5.2 Mode nuit / lisibilité ✅
 - [x] Détecter `prefers-color-scheme: dark` (premier lancement uniquement, sinon préférence persistée)
@@ -189,10 +189,11 @@
 - [x] Toggle ON/OFF dans LayerControl
 - [x] **Test :** AirportPanel (12 tests) — useAirports (3 tests) — Map couche airports (2 tests)
 
-### 5.4 Mesures et outils
-- [ ] Afficher le cap et la vitesse sol (depuis GPS)
-- [ ] Afficher les coordonnées du centre de la carte
-- [ ] Outil de mesure de distance (optionnel)
+### 5.4 Mesures et outils ✅
+- [x] Afficher le cap et la vitesse sol (depuis GPS) — composant `<HUD />` (cap 3 chiffres, vitesse en nœuds)
+- [x] Afficher les coordonnées du centre de la carte — `mapCenter` (store) alimenté sur `move`, format lat/lon hémisphères
+- [ ] Outil de mesure de distance (optionnel) — non implémenté (optionnel)
+- [x] **Test :** `geoFormat` (msToKnots/formatHeading/formatLatLon — 9 tests) + `HUD` (5 tests)
 
 ### 5.5 Optimisations performances mobile
 - [ ] Code splitting — charger les composants lourds en lazy
@@ -242,6 +243,7 @@
 - **2026-05-27** — Phase 4.1 Hook useNotam avec cache IndexedDB
 - **2026-05-27** — Phase 5.3 Aérodromes (760 terrains France) — 97 tests ✅
 - **2026-05-29** — Phase 5.2 Mode nuit (fond OSM assombri + toggle 🌙/☀️ + détection système) — 158 tests ✅
+- **2026-05-29** — Phase 5.1 Filtre altitudinal confirmé (userCeiling) + Phase 5.4 HUD mesures (cap/vitesse GPS + coords centre) — 171 tests ✅
 
 ---
 

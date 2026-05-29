@@ -4,6 +4,7 @@ import { ZoneStack } from '@/components/ZoneStack/ZoneStack'
 import { AirportPanel } from '@/components/AirportPanel/AirportPanel'
 import { LayerControl } from '@/components/LayerControl/LayerControl'
 import { DownloadManager } from '@/components/DownloadManager/DownloadManager'
+import { HUD } from '@/components/HUD/HUD'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { useAppStore } from '@/store'
@@ -204,6 +205,15 @@ export default function App() {
 
       {/* ── Carte ──────────────────────────────────────────────────────────── */}
       <Map className="flex-1" />
+
+      {/* ── HUD mesures (coordonnées centre + cap/vitesse GPS) ─────────────── */}
+      <div
+        className={`absolute bottom-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none transition-opacity duration-200 ${
+          zoneStack?.length ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
+        <HUD />
+      </div>
 
       {/* ── Panneau zones aériennes ────────────────────────────────────────── */}
       <ZoneStack />

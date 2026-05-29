@@ -562,6 +562,14 @@ export function Map({ className = '' }: MapProps) {
       attributionControl: false,
     })
 
+    // Met à jour le centre dans le store (HUD coordonnées) — initial + à chaque déplacement
+    const publishCenter = () => {
+      const c = map.getCenter()
+      useAppStore.getState().setMapCenter([c.lng, c.lat])
+    }
+    publishCenter()
+    map.on('move', publishCenter)
+
     map.addControl(new maplibregl.NavigationControl(), 'bottom-left')
     map.addControl(
       new maplibregl.AttributionControl({ compact: true }),

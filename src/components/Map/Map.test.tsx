@@ -37,6 +37,7 @@ const mockMapInstance = {
   loaded: vi.fn(() => true),
   flyTo: mockFlyTo,
   easeTo: mockEaseTo,
+  getCenter: vi.fn(() => ({ lng: 2.3, lat: 46.6 })),
 }
 
 const mockMarkerInstance = {
@@ -129,6 +130,7 @@ vi.mock('@/store', () => {
     highlightedZoneId: null,
     setHighlightedZoneId: mockSetHighlightedZoneId,
     darkMode: false,
+    setMapCenter: vi.fn(),
   })
   const fn = vi.fn((selector: (s: ReturnType<typeof makeState>) => unknown) =>
     selector(makeState()),

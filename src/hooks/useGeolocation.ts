@@ -13,6 +13,7 @@ interface UseGeolocationReturn extends GeolocationState {
 
 export function useGeolocation(): UseGeolocationReturn {
   const setUserPosition = useAppStore((s) => s.setUserPosition)
+  const setGpsMotion    = useAppStore((s) => s.setGpsMotion)
 
   const [state, setState] = useState<GeolocationState>({
     position: null,
@@ -62,6 +63,7 @@ export function useGeolocation(): UseGeolocationReturn {
       (position) => {
         setState({ position, error: null, loading: false })
         setUserPosition([position.coords.longitude, position.coords.latitude])
+        setGpsMotion(position.coords.speed, position.coords.heading)
       },
       (error) => {
         setState((prev) => ({ ...prev, error, loading: false }))
@@ -74,7 +76,7 @@ export function useGeolocation(): UseGeolocationReturn {
     )
 
     return () => navigator.geolocation.clearWatch(watchId)
-  }, [setUserPosition])
+  }, [setUserPosition, setGpsMotion])
 
   return { ...state, requestPosition }
 }

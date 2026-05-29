@@ -53,6 +53,15 @@ interface AppState {
   // Mode nuit
   darkMode: boolean
   toggleDarkMode: () => void
+
+  // Centre courant de la carte (HUD coordonnées) — [lon, lat]
+  mapCenter: [number, number] | null
+  setMapCenter: (center: [number, number] | null) => void
+
+  // Mouvement GPS (HUD cap + vitesse sol)
+  gpsSpeed: number | null   // m/s
+  gpsHeading: number | null // degrés vrais
+  setGpsMotion: (speed: number | null, heading: number | null) => void
 }
 
 export const useAppStore = create<AppState>()(
@@ -95,6 +104,13 @@ export const useAppStore = create<AppState>()(
 
       darkMode: false,
       toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
+
+      mapCenter: null,
+      setMapCenter: (center) => set({ mapCenter: center }),
+
+      gpsSpeed: null,
+      gpsHeading: null,
+      setGpsMotion: (speed, heading) => set({ gpsSpeed: speed, gpsHeading: heading }),
     }),
     {
       name: 'vfr-ulm-settings',
