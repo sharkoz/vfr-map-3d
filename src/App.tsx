@@ -1,10 +1,18 @@
-import { useEffect, useState } from 'react'
-import { Map } from '@/components/Map/Map'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { ZoneStack } from '@/components/ZoneStack/ZoneStack'
 import { AirportPanel } from '@/components/AirportPanel/AirportPanel'
 import { LayerControl } from '@/components/LayerControl/LayerControl'
-import { DownloadManager } from '@/components/DownloadManager/DownloadManager'
 import { HUD } from '@/components/HUD/HUD'
+
+// Composants lourds chargés en différé (code splitting) :
+// - Map embarque MapLibre GL + PMTiles (~1 Mo) → chunk séparé, chargé après le shell
+// - DownloadManager n'est ouvert qu'à la demande
+const Map = lazy(() =>
+  import('@/components/Map/Map').then((m) => ({ default: m.Map })),
+)
+const DownloadManager = lazy(() =>
+  import('@/components/DownloadManager/DownloadManager').then((m) => ({ default: m.DownloadManager })),
+)
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { useAppStore } from '@/store'
@@ -203,8 +211,20 @@ export default function App() {
         </div>
       )}
 
-      {/* ── Carte ──────────────────────────────────────────────────────────── */}
-      <Map className="flex-1" />
+      {/* ── Carte (chunk différé) ──────────────────────────────────────────── */}
+      <Suspense
+        fallback={
+          <div
+            className="flex-1 flex items-center justify-center"
+            style={{ background: '#070c14', color: '#3a5070' }}
+          >
+            <span className="inline-block animate-spin mr-2" style={{ color: '#f0a020' }}>⟳</span>
+            <span className="font-display text-sm tracking-wide">Chargement de la carte…</span>
+          </div>
+        }
+      >
+        <Map className="flex-1" />
+      </Suspense>
 
       {/* ── HUD mesures (coordonnées centre + cap/vitesse GPS) ─────────────── */}
       <div
@@ -221,8 +241,12 @@ export default function App() {
       {/* ── Panel aérodrome ────────────────────────────────────────────────── */}
       <AirportPanel airport={selectedAirport} />
 
-      {/* ── Gestionnaire offline ────────────────────────────────────────────── */}
-      <DownloadManager isOpen={downloadOpen} onClose={() => setDownloadOpen(false)} />
+      {/* ── Gestionnaire offline (chunk différé, monté à l'ouverture) ───────── */}
+      {downloadOpen && (
+        <Suspense fallback={null}>
+          <DownloadManager isOpen={downloadOpen} onClose={() => setDownloadOpen(false)} />
+        </Suspense>
+      )}
 
     </div>
   )

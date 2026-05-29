@@ -8,8 +8,8 @@
 ## 🔖 Session en cours
 
 **Dernière session :** 2026-05-29  
-**Statut :** Phases 5.1, 5.2, 5.4 complètes — 171 tests ✅ — Build OK  
-**Prochaine tâche :** Phase 4.2 — NotamOverlay (affichage NOTAM sur la carte) ou Phase 5.5 — code splitting (chunk > 500 kB)
+**Statut :** Phases 5.1, 5.2, 5.4 + code splitting (5.5) — 171 tests ✅ — Build OK (shell 229 kB)  
+**Prochaine tâche :** Phase 4.2 — NotamOverlay (⚠️ bloqué : API NOTAM réelle non branchée, mapping coordonnées = stub) ou Phase 3.4 toast online/offline / 1.4 cercle précision GPS
 
 ---
 
@@ -196,7 +196,8 @@
 - [x] **Test :** `geoFormat` (msToKnots/formatHeading/formatLatLon — 9 tests) + `HUD` (5 tests)
 
 ### 5.5 Optimisations performances mobile
-- [ ] Code splitting — charger les composants lourds en lazy
+- [x] Code splitting — `Map` (MapLibre+PMTiles) et `DownloadManager` en `React.lazy`/`Suspense`
+      → shell initial 229 kB (vs 1294 kB), chunk Map 1059 kB chargé en différé
 - [ ] Compression GeoJSON (topojson ou simplification)
 - [ ] Limiter le nombre de zones rendues selon le zoom
 - [ ] Audit Lighthouse > 90 (Performance + PWA)
