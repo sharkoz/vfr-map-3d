@@ -6,6 +6,7 @@ import { useAirspace } from '@/hooks/useAirspace'
 import { useAirports } from '@/hooks/useAirports'
 import type { AirspaceFeature, AirspaceFilters, AirspaceCollection } from '@/types/airspace'
 import type { AirportFeature, AirportCollection } from '@/types/airport'
+import { circlePolygon } from '@/utils/geoFormat'
 
 // France center
 const FRANCE_CENTER: [number, number] = [2.3, 46.6]
@@ -32,6 +33,11 @@ const RUNWAY_LAYER_LINE = 'runways-line'
 
 // ID de la couche de fond OSM (raster) — assombrie en mode nuit
 const OSM_LAYER_ID = 'osm-tiles'
+
+// IDs des couches MapLibre — cercle de précision GPS
+const GPS_ACCURACY_SOURCE_ID = 'gps-accuracy'
+const GPS_ACCURACY_LAYER_FILL = 'gps-accuracy-fill'
+const GPS_ACCURACY_LAYER_LINE = 'gps-accuracy-line'
 
 // Expression MapLibre : couleur de remplissage selon le type/classe
 const FILL_COLOR_EXPR: maplibregl.ExpressionSpecification = [
@@ -238,6 +244,7 @@ export function Map({ className = '' }: MapProps) {
   const [is3D, setIs3D] = useState(false)
 
   const userPosition        = useAppStore((s) => s.userPosition)
+  const gpsAccuracy         = useAppStore((s) => s.gpsAccuracy)
   const setSelectedAirport  = useAppStore((s) => s.setSelectedAirport)
   const setZoneStack        = useAppStore((s) => s.setZoneStack)
   const filters             = useAppStore((s) => s.filters)
@@ -780,6 +787,43 @@ export function Map({ className = '' }: MapProps) {
     if (map.loaded()) apply()
     else map.once('load', apply)
   }, [darkMode])
+
+  // --- Cercle de précision GPS ---
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+
+    const render = () => {
+      // Pas de position ou précision inconnue → vider la source si présente
+      const data: GeoJSON.FeatureCollection =
+        userPosition && gpsAccuracy != null && gpsAccuracy > 0
+          ? { type: 'FeatureCollection', features: [circlePolygon(userPosition[0], userPosition[1], gpsAccuracy)] }
+          : { type: 'FeatureCollection', features: [] }
+
+      const existing = map.getSource(GPS_ACCURACY_SOURCE_ID) as maplibregl.GeoJSONSource | undefined
+      if (existing) {
+        existing.setData(data)
+        return
+      }
+
+      map.addSource(GPS_ACCURACY_SOURCE_ID, { type: 'geojson', data })
+      map.addLayer({
+        id: GPS_ACCURACY_LAYER_FILL,
+        type: 'fill',
+        source: GPS_ACCURACY_SOURCE_ID,
+        paint: { 'fill-color': '#20d880', 'fill-opacity': 0.1 },
+      })
+      map.addLayer({
+        id: GPS_ACCURACY_LAYER_LINE,
+        type: 'line',
+        source: GPS_ACCURACY_SOURCE_ID,
+        paint: { 'line-color': '#20d880', 'line-width': 1, 'line-opacity': 0.4 },
+      })
+    }
+
+    if (map.loaded()) render()
+    else map.once('load', render)
+  }, [userPosition, gpsAccuracy])
 
   // --- Marqueur GPS ---
   useEffect(() => {

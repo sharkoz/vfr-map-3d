@@ -8,8 +8,8 @@
 ## 🔖 Session en cours
 
 **Dernière session :** 2026-05-29  
-**Statut :** Phases 5.1, 5.2, 5.4 + code splitting (5.5) — 171 tests ✅ — Build OK (shell 229 kB)  
-**Prochaine tâche :** Phase 4.2 — NotamOverlay (⚠️ bloqué : API NOTAM réelle non branchée, mapping coordonnées = stub) ou Phase 3.4 toast online/offline / 1.4 cercle précision GPS
+**Statut :** Phases 5.1, 5.2, 5.4, 5.5(partiel), 1.4 cercle GPS, 3.4 toast — 174 tests ✅ — Build OK (shell 229 kB)  
+**Prochaine tâche :** Phase 4.2 — NotamOverlay (⚠️ bloqué : API NOTAM réelle non branchée) ou Phase 6.2 README / 6.3 déploiement
 
 ---
 
@@ -44,7 +44,7 @@
 ### 1.4 Géolocalisation GPS
 - [x] Créer le hook `useGeolocation.ts`
 - [x] Afficher le marqueur de position GPS sur la carte
-- [ ] Afficher le cercle de précision
+- [x] Afficher le cercle de précision — couches `gps-accuracy` (fill+line) via `circlePolygon`
 - [x] Bouton "Centrer sur ma position" — géré via requestPosition()
 - [x] Gérer les erreurs (permission refusée, timeout)
 - [x] **Test :** hook retourne les états `loading`, `error`, `position`
@@ -138,7 +138,7 @@
 ### 3.4 Indicateur de connectivité
 - [x] Créer le hook `useOnlineStatus.ts`
 - [x] Badge "Hors-ligne" dans le header si pas de réseau
-- [ ] Toast notification lors du passage online/offline
+- [x] Toast notification lors du passage online/offline — toast transitoire (3.5s) dans App.tsx
 - [x] **Test :** changement d'état online/offline détecté
 
 ---
@@ -245,6 +245,8 @@
 - **2026-05-27** — Phase 5.3 Aérodromes (760 terrains France) — 97 tests ✅
 - **2026-05-29** — Phase 5.2 Mode nuit (fond OSM assombri + toggle 🌙/☀️ + détection système) — 158 tests ✅
 - **2026-05-29** — Phase 5.1 Filtre altitudinal confirmé (userCeiling) + Phase 5.4 HUD mesures (cap/vitesse GPS + coords centre) — 171 tests ✅
+- **2026-05-29** — Phase 5.5 code splitting (Map/DownloadManager lazy) — shell 229 kB
+- **2026-05-29** — Phase 1.4 cercle de précision GPS + Phase 3.4 toast online/offline — 174 tests ✅
 
 ---
 

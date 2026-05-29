@@ -9,6 +9,10 @@ interface AppState {
   userPosition: [number, number] | null
   setUserPosition: (pos: [number, number] | null) => void
 
+  // Précision GPS en mètres (cercle de précision sur la carte)
+  gpsAccuracy: number | null
+  setGpsAccuracy: (accuracy: number | null) => void
+
   // Zone aérienne sélectionnée (pour le panel)
   selectedZone: AirspaceFeature | null
   setSelectedZone: (zone: AirspaceFeature | null) => void
@@ -69,6 +73,9 @@ export const useAppStore = create<AppState>()(
     (set) => ({
       userPosition: null,
       setUserPosition: (pos) => set({ userPosition: pos }),
+
+      gpsAccuracy: null,
+      setGpsAccuracy: (accuracy) => set({ gpsAccuracy: accuracy }),
 
       selectedZone: null,
       setSelectedZone: (zone) => set({ selectedZone: zone }),

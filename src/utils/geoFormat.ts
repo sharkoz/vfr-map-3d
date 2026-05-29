@@ -22,6 +22,34 @@ export function formatHeading(headingDeg: number | null | undefined): string | n
 }
 
 /**
+ * Génère un polygone GeoJSON approximant un cercle géodésique autour de [lon, lat].
+ * `radiusMeters` est le rayon en mètres (ex: précision GPS). `steps` = nombre de sommets.
+ * Utilisé pour afficher le cercle de précision GPS, correct à tous les niveaux de zoom.
+ */
+export function circlePolygon(
+  lon: number,
+  lat: number,
+  radiusMeters: number,
+  steps = 64,
+): GeoJSON.Feature<GeoJSON.Polygon> {
+  const coords: [number, number][] = []
+  const latRad = (lat * Math.PI) / 180
+  const dLat = radiusMeters / 111_320 // mètres → degrés de latitude
+  const dLon = radiusMeters / (111_320 * Math.cos(latRad))
+
+  for (let i = 0; i <= steps; i++) {
+    const theta = (i / steps) * 2 * Math.PI
+    coords.push([lon + dLon * Math.cos(theta), lat + dLat * Math.sin(theta)])
+  }
+
+  return {
+    type: 'Feature',
+    geometry: { type: 'Polygon', coordinates: [coords] },
+    properties: {},
+  }
+}
+
+/**
  * Formate une coordonnée (lon, lat) en degrés décimaux avec hémisphères.
  * Ex: [2.3, 46.6] → "46.6000°N 002.3000°E"
  */

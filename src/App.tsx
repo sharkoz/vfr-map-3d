@@ -28,6 +28,9 @@ export default function App() {
 
   const [downloadOpen, setDownloadOpen] = useState(false)
   const [filterOpen,   setFilterOpen]   = useState(false)
+  // Toast transitoire au changement de connectivité
+  const [connToast, setConnToast] = useState<'online' | 'offline' | null>(null)
+  const [firstStatus, setFirstStatus] = useState(true)
 
   useEffect(() => { requestPosition() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -46,6 +49,14 @@ export default function App() {
   useEffect(() => {
     if (zoneStack && zoneStack.length > 0) setFilterOpen(false)
   }, [zoneStack])
+
+  // Toast lors d'un changement de connectivité (ignore l'état initial au montage)
+  useEffect(() => {
+    if (firstStatus) { setFirstStatus(false); return }
+    setConnToast(isOnline ? 'online' : 'offline')
+    const t = setTimeout(() => setConnToast(null), 3500)
+    return () => clearTimeout(t)
+  }, [isOnline]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="relative w-full h-full flex flex-col bg-[#070c14]">
@@ -208,6 +219,26 @@ export default function App() {
         >
           <span className="inline-block animate-spin" style={{ color: '#f0a020' }}>⟳</span>
           <span className="font-display text-sm tracking-wide">Chargement des espaces aériens…</span>
+        </div>
+      )}
+
+      {/* ── Toast connectivité (transitoire) ────────────────────────────────── */}
+      {connToast && (
+        <div
+          data-testid="conn-toast"
+          role="status"
+          className="absolute top-16 left-1/2 -translate-x-1/2 z-50 rounded-xl px-4 py-2 flex items-center gap-2 text-sm pointer-events-none whitespace-nowrap"
+          style={{
+            background: connToast === 'online' ? 'rgba(13,40,28,0.94)' : 'rgba(40,16,16,0.94)',
+            border: `1px solid ${connToast === 'online' ? 'rgba(32,216,128,0.4)' : 'rgba(240,96,96,0.4)'}`,
+            color: connToast === 'online' ? '#20d880' : '#f06060',
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          <span aria-hidden>{connToast === 'online' ? '📶' : '✈️'}</span>
+          <span className="font-display text-sm tracking-wide">
+            {connToast === 'online' ? 'Connexion rétablie' : 'Hors-ligne — données en cache'}
+          </span>
         </div>
       )}
 

@@ -555,6 +555,47 @@ describe('Map', () => {
     expect(mockMapInstance.setPaintProperty).toHaveBeenCalledWith('osm-tiles', 'raster-brightness-max', 1)
   })
 
+  it('ajoute le cercle de précision GPS quand position + précision disponibles', async () => {
+    const { useAppStore } = await import('@/store')
+    vi.mocked(useAppStore).mockImplementation((selector) => {
+      const state = {
+        userPosition: [2.35, 48.86] as [number, number],
+        gpsAccuracy: 25,
+        setSelectedZone: mockSetSelectedZone,
+        setSelectedAirport: mockSetSelectedAirport,
+        setZoneStack: mockSetZoneStack,
+        zoneStack: null,
+        filters: { ...DEFAULT_FILTERS },
+        airspaceLoaded: false,
+        setAirspaceLoaded: vi.fn(),
+        showAirports: true,
+        showPrivateAirports: false,
+        userCeiling: 3500,
+        highlightedZoneId: null,
+        setHighlightedZoneId: mockSetHighlightedZoneId,
+        darkMode: false,
+      }
+      return selector(state)
+    })
+
+    render(<Map />)
+
+    expect(mockAddSource).toHaveBeenCalledWith(
+      'gps-accuracy',
+      expect.objectContaining({
+        type: 'geojson',
+        data: expect.objectContaining({
+          features: expect.arrayContaining([
+            expect.objectContaining({ geometry: expect.objectContaining({ type: 'Polygon' }) }),
+          ]),
+        }),
+      }),
+    )
+    expect(mockAddLayer).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'gps-accuracy-fill', type: 'fill' }),
+    )
+  })
+
   it('bouton GPS actif avec une position, appelle flyTo au clic', async () => {
     const { useAppStore } = await import('@/store')
     vi.mocked(useAppStore).mockImplementation((selector) => {

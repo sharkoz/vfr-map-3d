@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { msToKnots, formatHeading, formatLatLon } from './geoFormat'
+import { msToKnots, formatHeading, formatLatLon, circlePolygon } from './geoFormat'
 
 describe('msToKnots', () => {
   it('convertit m/s en nœuds (arrondi)', () => {
@@ -48,5 +48,23 @@ describe('formatLatLon', () => {
 
   it('remplit les coordonnées sur 3 chiffres avant la virgule', () => {
     expect(formatLatLon(5, 9)).toBe('9.0000°N 005.0000°E')
+  })
+})
+
+describe('circlePolygon', () => {
+  it('produit un anneau fermé avec steps+1 sommets', () => {
+    const poly = circlePolygon(2.3, 46.6, 100, 32)
+    const ring = poly.geometry.coordinates[0]
+    expect(ring).toHaveLength(33) // 32 segments + point de fermeture
+    expect(ring[0]).toEqual(ring[ring.length - 1]) // anneau fermé
+  })
+
+  it('centre le polygone et respecte le rayon en latitude', () => {
+    const radius = 111_320 // ~1° de latitude
+    const poly = circlePolygon(0, 0, radius, 4)
+    const ring = poly.geometry.coordinates[0]
+    // À theta=90° (i=1 sur 4) → point au nord, lat ≈ +1°
+    expect(ring[1][1]).toBeCloseTo(1, 3)
+    expect(ring[1][0]).toBeCloseTo(0, 6)
   })
 })
