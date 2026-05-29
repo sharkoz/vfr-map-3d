@@ -14,7 +14,6 @@
     "fetch-airports": "tsx scripts/fetch-airports.ts"
   },
   "dependencies": {
-    "@rolldown/binding-win32-x64-msvc": "^1.0.2",
     "idb": "^8.0.3",
     "maplibre-gl": "^5.24.0",
     "pmtiles": "^4.4.1",

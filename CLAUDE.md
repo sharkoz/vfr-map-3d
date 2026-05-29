@@ -89,13 +89,17 @@ Progressive Web App (PWA) installable sur mobile pour les pilotes ULM en France.
 
 ## ⚠️ Particularités environnement
 
-**WSL + npm Windows** :
+**WSL + node Linux (nvm)** — *migré depuis npm Windows le 2026-05-29* :
 - `/home/cosme/workspace/vfr` est un symlink vers `/mnt/c/Users/cosme/workspace/vfr`
-- Le `npm` utilisé est le Windows npm (`/mnt/c/Program Files/nodejs/npm`)
-- Conséquences :
-  - `@rolldown/binding-win32-x64-msvc` doit être installé manuellement (binding natif)
-  - `jsdom@25` requis (v27 a des dépendances ESM incompatibles avec Node.js Windows)
-  - Le fichier `.claude/` est géré par Claude Code dans ce répertoire
+- **node Linux** via nvm : `/home/cosme/.nvm/versions/node/<version>/bin` (actuellement v24.16.0, npm 11)
+- `node_modules` contient les **bindings natifs Linux** (`@rolldown/binding-linux-x64-gnu`, `@esbuild/linux-x64`, `lightningcss-linux-x64-gnu`, `@tailwindcss/oxide-linux-x64-gnu`)
+- ⚠️ Le shell des commandes Claude Code est **non-login / non-interactif** → nvm n'est pas chargé automatiquement.
+  Préfixer le PATH si besoin : `export PATH="/home/cosme/.nvm/versions/node/v24.16.0/bin:$PATH"`.
+  Persistance prévue via `BASH_ENV=/home/cosme/.claude/shell-env.sh` (à activer dans `.claude/settings.local.json`).
+- `@rolldown/binding-win32-x64-msvc` **retiré** de `package.json` (inutile/incompatible sur Linux ;
+  rolldown résout `binding-linux-x64-gnu` automatiquement)
+- `jsdom@25` conservé (mise à jour vers v27+ possible désormais sur node Linux, non testée)
+- Le fichier `.claude/` est géré par Claude Code dans ce répertoire
 
 ---
 
