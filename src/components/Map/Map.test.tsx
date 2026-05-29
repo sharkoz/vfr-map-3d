@@ -13,6 +13,7 @@ const mockGetSource = vi.fn()
 const mockGetLayer = vi.fn()
 const mockSetFilter = vi.fn()
 const mockSetLayoutProperty = vi.fn()
+const mockSetPaintProperty = vi.fn()
 const mockGetCanvas = vi.fn(() => ({ style: { cursor: '' } }))
 const mockOnMap = vi.fn()
 const mockOnce = vi.fn()
@@ -31,6 +32,7 @@ const mockMapInstance = {
   getLayer: mockGetLayer,
   setFilter: mockSetFilter,
   setLayoutProperty: mockSetLayoutProperty,
+  setPaintProperty: mockSetPaintProperty,
   getCanvas: mockGetCanvas,
   loaded: vi.fn(() => true),
   flyTo: mockFlyTo,
@@ -126,6 +128,7 @@ vi.mock('@/store', () => {
     userCeiling: 3500,
     highlightedZoneId: null,
     setHighlightedZoneId: mockSetHighlightedZoneId,
+    darkMode: false,
   })
   const fn = vi.fn((selector: (s: ReturnType<typeof makeState>) => unknown) =>
     selector(makeState()),
@@ -490,6 +493,64 @@ describe('Map', () => {
     expect(mockSetLayoutProperty).toHaveBeenCalledWith('airspace-extrusion', 'visibility', 'none')
     expect(mockSetLayoutProperty).toHaveBeenCalledWith('airspace-fill', 'visibility', 'visible')
     expect(mockSetLayoutProperty).toHaveBeenCalledWith('airspace-line', 'visibility', 'visible')
+  })
+
+  it('mode nuit : assombrit le fond OSM et adapte les labels', async () => {
+    const { useAppStore } = await import('@/store')
+    vi.mocked(useAppStore).mockImplementation((selector) => {
+      const state = {
+        userPosition: null,
+        setSelectedZone: mockSetSelectedZone,
+        setSelectedAirport: mockSetSelectedAirport,
+        setZoneStack: mockSetZoneStack,
+        zoneStack: null,
+        filters: { ...DEFAULT_FILTERS },
+        airspaceLoaded: false,
+        setAirspaceLoaded: vi.fn(),
+        showAirports: true,
+        showPrivateAirports: false,
+        userCeiling: 3500,
+        highlightedZoneId: null,
+        setHighlightedZoneId: mockSetHighlightedZoneId,
+        darkMode: true,
+      }
+      return selector(state)
+    })
+
+    mockGetLayer.mockReturnValue({})
+    render(<Map />)
+
+    // Le fond OSM est dimmé (brightness-max < 1)
+    expect(mockMapInstance.setPaintProperty).toHaveBeenCalledWith('osm-tiles', 'raster-brightness-max', 0.5)
+    // Les labels passent en texte clair
+    expect(mockMapInstance.setPaintProperty).toHaveBeenCalledWith('airspace-label', 'text-color', '#e2e8f0')
+  })
+
+  it('mode jour : fond OSM en pleine luminosité', async () => {
+    const { useAppStore } = await import('@/store')
+    vi.mocked(useAppStore).mockImplementation((selector) => {
+      const state = {
+        userPosition: null,
+        setSelectedZone: mockSetSelectedZone,
+        setSelectedAirport: mockSetSelectedAirport,
+        setZoneStack: mockSetZoneStack,
+        zoneStack: null,
+        filters: { ...DEFAULT_FILTERS },
+        airspaceLoaded: false,
+        setAirspaceLoaded: vi.fn(),
+        showAirports: true,
+        showPrivateAirports: false,
+        userCeiling: 3500,
+        highlightedZoneId: null,
+        setHighlightedZoneId: mockSetHighlightedZoneId,
+        darkMode: false,
+      }
+      return selector(state)
+    })
+
+    mockGetLayer.mockReturnValue({})
+    render(<Map />)
+    expect(mockMapInstance.setPaintProperty).toHaveBeenCalledWith('osm-tiles', 'raster-brightness-max', 1)
   })
 
   it('bouton GPS actif avec une position, appelle flyTo au clic', async () => {

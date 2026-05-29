@@ -30,6 +30,9 @@ const AIRPORT_LAYER_LABEL = 'airports-label'
 const RUNWAY_SOURCE_ID = 'runways'
 const RUNWAY_LAYER_LINE = 'runways-line'
 
+// ID de la couche de fond OSM (raster) — assombrie en mode nuit
+const OSM_LAYER_ID = 'osm-tiles'
+
 // Expression MapLibre : couleur de remplissage selon le type/classe
 const FILL_COLOR_EXPR: maplibregl.ExpressionSpecification = [
   'match', ['get', 'type'],
@@ -242,6 +245,7 @@ export function Map({ className = '' }: MapProps) {
   const showPrivateAirports = useAppStore((s) => s.showPrivateAirports)
   const userCeiling         = useAppStore((s) => s.userCeiling)
   const highlightedZoneId   = useAppStore((s) => s.highlightedZoneId)
+  const darkMode            = useAppStore((s) => s.darkMode)
   const zoneStackOpen       = useAppStore((s) => s.zoneStack !== null && s.zoneStack.length > 0)
 
   // Ref pour distinguer "clic sur aérodrome" du "clic sur fond de carte"
@@ -723,6 +727,51 @@ export function Map({ className = '' }: MapProps) {
       })
     }
   }, [showAirports, showPrivateAirports])
+
+  // --- Mode nuit : assombrit le fond OSM et renforce le contraste des zones ---
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+
+    const apply = () => {
+      // Fond de carte raster : dimmé + désaturé + teinté bleu nuit pour réduire l'éblouissement cockpit
+      if (map.getLayer(OSM_LAYER_ID)) {
+        map.setPaintProperty(OSM_LAYER_ID, 'raster-brightness-max', darkMode ? 0.5 : 1)
+        map.setPaintProperty(OSM_LAYER_ID, 'raster-saturation',     darkMode ? -0.55 : 0)
+        map.setPaintProperty(OSM_LAYER_ID, 'raster-contrast',       darkMode ? 0.12 : 0)
+        map.setPaintProperty(OSM_LAYER_ID, 'raster-hue-rotate',     darkMode ? 200 : 0)
+      }
+
+      // Zones : bordures plus marquées sur fond sombre
+      if (map.getLayer(LAYER_LINE)) {
+        map.setPaintProperty(LAYER_LINE, 'line-opacity', darkMode ? 1 : 0.85)
+      }
+      if (map.getLayer(LAYER_FILL)) {
+        map.setPaintProperty(
+          LAYER_FILL,
+          'fill-opacity',
+          darkMode
+            ? (['match', ['get', 'type'],
+                'PROHIBITED', 0.45, 'RESTRICTED', 0.38, 'DANGER', 0.35, 0.22,
+              ] as maplibregl.ExpressionSpecification)
+            : FILL_OPACITY_EXPR,
+        )
+      }
+
+      // Labels : texte clair + halo sombre la nuit (inverse du mode jour)
+      if (map.getLayer(LAYER_LABEL)) {
+        map.setPaintProperty(LAYER_LABEL, 'text-color',      darkMode ? '#e2e8f0' : '#1e293b')
+        map.setPaintProperty(LAYER_LABEL, 'text-halo-color', darkMode ? 'rgba(7,12,20,0.9)' : 'rgba(255,255,255,0.85)')
+      }
+      if (map.getLayer(AIRPORT_LAYER_LABEL)) {
+        map.setPaintProperty(AIRPORT_LAYER_LABEL, 'text-color',      darkMode ? '#cfe3f5' : '#1e3a5f')
+        map.setPaintProperty(AIRPORT_LAYER_LABEL, 'text-halo-color', darkMode ? 'rgba(7,12,20,0.9)' : 'rgba(255,255,255,0.9)')
+      }
+    }
+
+    if (map.loaded()) apply()
+    else map.once('load', apply)
+  }, [darkMode])
 
   // --- Marqueur GPS ---
   useEffect(() => {

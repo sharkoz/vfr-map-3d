@@ -14,11 +14,24 @@ export default function App() {
   const selectedAirport = useAppStore((s) => s.selectedAirport)
   const airspaceLoaded  = useAppStore((s) => s.airspaceLoaded)
   const zoneStack       = useAppStore((s) => s.zoneStack)
+  const darkMode        = useAppStore((s) => s.darkMode)
+  const toggleDarkMode  = useAppStore((s) => s.toggleDarkMode)
 
   const [downloadOpen, setDownloadOpen] = useState(false)
   const [filterOpen,   setFilterOpen]   = useState(false)
 
   useEffect(() => { requestPosition() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Au tout premier lancement (aucune préférence persistée), suivre le réglage système
+  useEffect(() => {
+    try {
+      const noStoredPrefs = !localStorage.getItem('vfr-ulm-settings')
+      const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches
+      if (noStoredPrefs && prefersDark && !useAppStore.getState().darkMode) {
+        toggleDarkMode()
+      }
+    } catch { /* matchMedia/localStorage indisponibles → mode jour par défaut */ }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fermer le panneau filtre quand la ZoneStack s'ouvre
   useEffect(() => {
@@ -70,6 +83,27 @@ export default function App() {
               <span>Hors-ligne</span>
             </div>
           )}
+
+          {/* Bouton mode nuit / jour */}
+          <button
+            onClick={toggleDarkMode}
+            aria-pressed={darkMode}
+            aria-label={darkMode ? 'Passer en mode jour' : 'Passer en mode nuit'}
+            title={darkMode ? 'Mode jour' : 'Mode nuit'}
+            data-testid="dark-mode-toggle"
+            className="rounded-lg p-2 transition-all duration-200"
+            style={darkMode ? {
+              background: 'rgba(240,160,32,0.12)',
+              border: '1px solid rgba(240,160,32,0.35)',
+              color: '#f0a020',
+            } : {
+              background: 'rgba(30,48,80,0.6)',
+              border: '1px solid rgba(42,68,100,0.6)',
+              color: '#5a7a9a',
+            }}
+          >
+            <span className="text-base leading-none" aria-hidden>{darkMode ? '🌙' : '☀️'}</span>
+          </button>
 
           {/* Bouton filtres */}
           <button

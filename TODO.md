@@ -7,9 +7,9 @@
 
 ## 🔖 Session en cours
 
-**Dernière session :** 2026-05-27  
-**Statut :** Phase 5.3 complète — 97 tests ✅ — Build OK  
-**Prochaine tâche :** Phase 5.2 — Mode nuit / lisibilité
+**Dernière session :** 2026-05-29  
+**Statut :** Phase 5.2 complète — 158 tests ✅ — Build OK  
+**Prochaine tâche :** Phase 5.1 — Filtre altitudinal (slider altitude max) — voir aussi le `userCeiling` déjà en place dans LayerControl
 
 ---
 
@@ -174,11 +174,12 @@
 - [ ] Affichage par défaut adapté ULM (< 1000ft AGL → zones pertinentes)
 - [ ] **Test :** filtre altitude masque correctement les zones
 
-### 5.2 Mode nuit / lisibilité
-- [ ] Détecter `prefers-color-scheme: dark`
-- [ ] Style carte sombre (style MapLibre alternatif)
-- [ ] Ajustement des couleurs de zones pour contraste nocturne
-- [ ] Toggle manuel dans l'interface
+### 5.2 Mode nuit / lisibilité ✅
+- [x] Détecter `prefers-color-scheme: dark` (premier lancement uniquement, sinon préférence persistée)
+- [x] Style carte sombre — fond OSM assombri via `raster-*` (brightness/saturation/contrast/hue-rotate)
+- [x] Ajustement des couleurs de zones pour contraste nocturne (opacité fills + labels clairs/halo sombre)
+- [x] Toggle manuel dans l'interface (bouton 🌙/☀️ dans le header, persisté via Zustand)
+- [x] **Test :** mode nuit assombrit OSM + adapte les labels — mode jour pleine luminosité (2 tests)
 
 ### 5.3 Aérodromes et terrains ULM ✅
 - [x] Fetcher les aérodromes depuis OpenAIP (`/api/airports?country=FR`) — 760 aérodromes dont 299 ULM
@@ -240,6 +241,7 @@
 - **2026-05-27** — Phase 3.4 Hook useOnlineStatus + badge hors-ligne
 - **2026-05-27** — Phase 4.1 Hook useNotam avec cache IndexedDB
 - **2026-05-27** — Phase 5.3 Aérodromes (760 terrains France) — 97 tests ✅
+- **2026-05-29** — Phase 5.2 Mode nuit (fond OSM assombri + toggle 🌙/☀️ + détection système) — 158 tests ✅
 
 ---
 
