@@ -20,7 +20,7 @@ export function useAirports(): UseAirportsReturn {
       setError(null)
 
       try {
-        const response = await fetch('/data/airports-france.geojson')
+        const response = await fetch(`${import.meta.env.BASE_URL}data/airports-france.geojson`)
         if (!response.ok) {
           throw new Error(`Erreur chargement aérodromes: ${response.status}`)
         }

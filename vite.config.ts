@@ -4,8 +4,14 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { resolve } from 'path'
 
+// Sous-chemin GitHub Pages en production (https://sharkoz.github.io/vfr-map-3d/),
+// racine en développement. Les fetch de données utilisent import.meta.env.BASE_URL
+// pour rester corrects dans les deux cas.
+const GH_PAGES_BASE = '/vfr-map-3d/'
+
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  base: command === 'build' ? GH_PAGES_BASE : '/',
   plugins: [
     react(),
     tailwindcss(),
@@ -20,7 +26,8 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
+        // Relatif au manifest → résout vers la base (racine en dev, /vfr-map-3d/ en prod)
+        start_url: '.',
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
@@ -57,13 +64,4 @@ export default defineConfig({
       '@': resolve(__dirname, 'src'),
     },
   },
-  server: {
-    proxy: {
-      '/api/openaip': {
-        target: 'https://api.openaip.net',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/openaip/, '/api'),
-      },
-    },
-  },
-})
+}))

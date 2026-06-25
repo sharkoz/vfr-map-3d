@@ -7,7 +7,6 @@ Progressive Web App (PWA) installable sur mobile pour les pilotes ULM en France.
 - 🇫🇷 Explication en français de ce qui est autorisé/interdit par zone
 - 📍 Position GPS avec cap, vitesse sol et cercle de précision
 - 🛬 760 aérodromes et terrains ULM de France
-- ⚠️ NOTAM avec cache offline et badge d'avertissement de fraîcheur
 - 🌙 Mode nuit / lisibilité
 
 ---
@@ -112,7 +111,6 @@ bundlés — inutile d'appeler l'API à chaque lancement (respecter les rate lim
 | OpenAIP `/api/airspaces?country=FR` | Espaces aériens (CTR, TMA, Classes A-G, P/R/D, SIV…) | `npm run fetch-data` |
 | OpenAIP `/api/airports?country=FR` | 760 aérodromes / terrains ULM | `npm run fetch-airports` |
 | Protomaps PMTiles | Fond de carte OSM offline | manuelle (voir CLAUDE.md) |
-| OpenAIP NOTAM | NOTAM (cache IndexedDB, TTL 1h) | fetch réseau |
 
 ### Règles ULM par type de zone
 
@@ -135,12 +133,33 @@ bundlés — inutile d'appeler l'API à chaque lancement (respecter les rate lim
 1. Télécharger les données via le **Download Manager** (bouton dans l'app).
 2. Le GeoJSON airspace est stocké en IndexedDB ; le shell de l'app et les tuiles
    sont cachés par le Service Worker (Workbox).
-3. Hors réseau : la carte, les zones et le dernier cache NOTAM restent
-   disponibles. Les NOTAM affichent un badge « ⚠️ non actualisés » avec la date.
+3. Hors réseau : les zones, les aérodromes et la position GPS restent
+   disponibles depuis le cache. Le fond de carte (tuiles OSM en ligne) n'est
+   pas mis en cache et apparaît gris sans connexion.
 
 ---
 
-## 🚢 Déploiement (self-hosted via Docker)
+## 🚢 Déploiement
+
+### GitHub Pages (CI/CD automatique)
+
+L'app est un site **100 % statique** (aucun backend) : un push sur `main`
+déclenche le workflow [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)
+qui build et publie sur GitHub Pages.
+
+1. **Settings → Pages → Build and deployment → Source : GitHub Actions** (une seule fois).
+2. Pousser sur `main` → le site se déploie sur
+   `https://sharkoz.github.io/vfr-map-3d/`.
+
+Le sous-chemin `/vfr-map-3d/` est géré par `base` dans `vite.config.ts` ; en
+local (`npm run dev`) l'app reste servie à la racine. Aucune clé API n'est
+nécessaire (données bundlées).
+
+> ⚠️ Le fond de carte (tuiles OSM), les polices et les glyphes MapLibre sont
+> chargés en ligne : la carte est pleinement fonctionnelle connectée, mais le
+> fond reste gris hors-ligne (zones, aérodromes et GPS fonctionnent en cache).
+
+### Self-hosted (Docker, alternative)
 
 L'app est une PWA statique servie par nginx. Image multi-stage (build Node →
 service nginx) fournie par le `Dockerfile`.
@@ -164,9 +183,9 @@ La config nginx (`nginx.conf`) gère :
 - assets hashés (`/assets/`) en cache long immuable
 - bons types MIME pour `.geojson` (`application/geo+json`) et `.pmtiles`
 
-> ⚠️ La clé `VITE_OPENAIP_API_KEY` est inlinée **au moment du build** (Vite).
-> Inutile actuellement (données bundlées, NOTAM en pause) ; si besoin plus tard,
-> la passer en build arg avant `vite build`.
+> ℹ️ Aucune clé API n'est requise au build : les données sont bundlées dans
+> `public/data/`. `VITE_OPENAIP_API_KEY` ne sert qu'aux scripts de
+> rafraîchissement des données (`npm run fetch-data` / `fetch-airports`).
 
 Penser à tester l'installation PWA et le mode offline sur Android **et** iOS
 (Safari limite les Service Workers).

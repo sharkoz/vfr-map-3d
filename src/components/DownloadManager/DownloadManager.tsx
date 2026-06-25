@@ -36,7 +36,7 @@ export function DownloadManager({ isOpen, onClose }: DownloadManagerProps) {
     setStatus('downloading')
     setErrorMsg(null)
     try {
-      const res = await fetch('/data/airspace-france.geojson')
+      const res = await fetch(`${import.meta.env.BASE_URL}data/airspace-france.geojson`)
       if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`)
       const data: AirspaceCollection = await res.json()
       await saveAirspace(data)

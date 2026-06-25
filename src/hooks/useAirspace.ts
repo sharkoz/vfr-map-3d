@@ -40,8 +40,8 @@ export function useAirspace(): UseAirspaceReturn {
           if (fresh) return
         }
 
-        // 2. Charger le fichier bundlé
-        const response = await fetch('/data/airspace-france.geojson')
+        // 2. Charger le fichier bundlé (BASE_URL gère le sous-chemin GitHub Pages)
+        const response = await fetch(`${import.meta.env.BASE_URL}data/airspace-france.geojson`)
         if (!response.ok) {
           throw new Error(`Erreur chargement airspace: ${response.status}`)
         }

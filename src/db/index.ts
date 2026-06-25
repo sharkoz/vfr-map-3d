@@ -11,14 +11,6 @@ interface VfrDB extends DBSchema {
       fetchedAt: number
     }
   }
-  notam: {
-    key: string
-    value: {
-      id: string
-      data: unknown
-      fetchedAt: number
-    }
-  }
   settings: {
     key: string
     value: {
@@ -44,11 +36,6 @@ export async function getDB(): Promise<IDBPDatabase<VfrDB>> {
         db.createObjectStore('airspace', { keyPath: 'id' })
       }
 
-      // Store pour les NOTAM
-      if (!db.objectStoreNames.contains('notam')) {
-        db.createObjectStore('notam', { keyPath: 'id' })
-      }
-
       // Store pour les préférences utilisateur
       if (!db.objectStoreNames.contains('settings')) {
         db.createObjectStore('settings', { keyPath: 'key' })
@@ -68,7 +55,6 @@ export async function getDB(): Promise<IDBPDatabase<VfrDB>> {
 // TTL pour les données cachées (en millisecondes)
 export const TTL = {
   AIRSPACE: 7 * 24 * 60 * 60 * 1000,  // 7 jours
-  NOTAM: 60 * 60 * 1000,               // 1 heure
 }
 
 // --- Airspace ---
@@ -96,35 +82,9 @@ export async function isAirspaceFresh(): Promise<boolean> {
   return Date.now() - entry.fetchedAt < TTL.AIRSPACE
 }
 
-// --- NOTAM ---
-
-export async function saveNotam(icao: string, data: unknown): Promise<void> {
-  const db = await getDB()
-  await db.put('notam', {
-    id: icao,
-    data,
-    fetchedAt: Date.now(),
-  })
-}
-
-export async function loadNotam(icao: string): Promise<{ data: unknown; fetchedAt: number } | null> {
-  const db = await getDB()
-  const entry = await db.get('notam', icao)
-  if (!entry) return null
-  return { data: entry.data, fetchedAt: entry.fetchedAt }
-}
-
-export async function isNotamFresh(icao: string): Promise<boolean> {
-  const db = await getDB()
-  const entry = await db.get('notam', icao)
-  if (!entry) return false
-  return Date.now() - entry.fetchedAt < TTL.NOTAM
-}
-
 // --- Nettoyage ---
 
 export async function clearAll(): Promise<void> {
   const db = await getDB()
   await db.clear('airspace')
-  await db.clear('notam')
 }
