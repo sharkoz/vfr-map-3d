@@ -1,0 +1,11 @@
+# Déploiement self-hosted. Placer derrière un reverse proxy (Traefik, Caddy,
+# nginx) qui termine le HTTPS — obligatoire pour le Service Worker et le GPS.
+services:
+  vfr:
+    build: .
+    image: vfr-ulm-france:latest
+    container_name: vfr-ulm
+    restart: unless-stopped
+    ports:
+      # Exposer en local ; le reverse proxy mappe le 443 public vers ce port.
+      - "8080:80"

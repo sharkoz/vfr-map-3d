@@ -8,8 +8,8 @@
 ## 🔖 Session en cours
 
 **Dernière session :** 2026-05-29  
-**Statut :** Phases 5.1, 5.2, 5.4, 5.5(partiel), 1.4 cercle GPS, 3.4 toast — 174 tests ✅ — Build OK (shell 229 kB)  
-**Prochaine tâche :** Phase 4.2 — NotamOverlay (⚠️ bloqué : API NOTAM réelle non branchée) ou Phase 6.2 README / 6.3 déploiement
+**Statut :** Phase 6.2 README + Phase 6.3 packaging Docker (Dockerfile/nginx/compose) ✅ — 174 tests ✅ — Build OK  
+**Prochaine tâche :** Phase 4.2 — NotamOverlay (⚠️ en pause : attente compte autorouter.aero, inscrit 2026-05-29) — sinon : build/test image Docker sur le serveur, test PWA Android/iOS
 
 ---
 
@@ -214,14 +214,15 @@
 - [ ] Test E2E : mode offline (mock SW) → app fonctionnelle
 
 ### 6.2 Documentation
-- [ ] README.md complet (setup, développement, déploiement)
-- [ ] Documenter la procédure de mise à jour des données airspace
-- [ ] Documenter l'API OpenAIP utilisée
+- [x] README.md complet (setup, développement, déploiement) + `.env.local.example`
+- [x] Documenter la procédure de mise à jour des données airspace (`fetch-data` / `fetch-airports`)
+- [x] Documenter l'API OpenAIP utilisée (clé, header, endpoints)
 
 ### 6.3 Déploiement
-- [ ] Configurer le build de production (`npm run build`)
-- [ ] Choisir l'hébergement (GitHub Pages, Netlify, Vercel)
-- [ ] Configurer HTTPS (obligatoire pour PWA + GPS)
+- [x] Configurer le build de production (`npm run build` — vérifié, dist OK)
+- [x] Choisir l'hébergement : **self-hosted via Docker** (Dockerfile multi-stage + nginx + docker-compose)
+- [ ] Configurer HTTPS (reverse proxy en amont — Traefik/Caddy/nginx — à faire côté serveur)
+- [ ] Builder/tester l'image Docker (⚠️ Docker absent du WSL de dev — à faire sur le serveur)
 - [ ] Tester l'installation PWA sur Android et iOS
 - [ ] Tester le mode offline sur vrai téléphone
 
@@ -247,6 +248,8 @@
 - **2026-05-29** — Phase 5.1 Filtre altitudinal confirmé (userCeiling) + Phase 5.4 HUD mesures (cap/vitesse GPS + coords centre) — 171 tests ✅
 - **2026-05-29** — Phase 5.5 code splitting (Map/DownloadManager lazy) — shell 229 kB
 - **2026-05-29** — Phase 1.4 cercle de précision GPS + Phase 3.4 toast online/offline — 174 tests ✅
+- **2026-05-29** — Phase 6.2 Documentation : README projet complet (setup, données, offline, déploiement) + `.env.local.example`
+- **2026-05-29** — Phase 6.3 Packaging déploiement : Dockerfile multi-stage (Node build → nginx) + nginx.conf (SPA/PWA) + docker-compose.yml + .dockerignore — build vérifié (Docker absent du WSL → image à builder sur serveur)
 
 ---
 
