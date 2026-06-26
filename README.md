@@ -110,7 +110,8 @@ bundlés — inutile d'appeler l'API à chaque lancement (respecter les rate lim
 |--------|--------|-------------|
 | OpenAIP `/api/airspaces?country=FR` | Espaces aériens (CTR, TMA, Classes A-G, P/R/D, SIV…) | `npm run fetch-data` |
 | OpenAIP `/api/airports?country=FR` | 760 aérodromes / terrains ULM | `npm run fetch-airports` |
-| Protomaps PMTiles | Fond de carte OSM offline | manuelle (voir CLAUDE.md) |
+| OpenStreetMap (tuiles raster) | Fond de carte (cache progressif hors-ligne) | tuiles en ligne |
+| Glyphes Open Sans (openmaptiles) | Labels carte, auto-hébergés (`public/fonts/`) | bundlé |
 
 ### Règles ULM par type de zone
 
@@ -134,8 +135,11 @@ bundlés — inutile d'appeler l'API à chaque lancement (respecter les rate lim
 2. Le GeoJSON airspace est stocké en IndexedDB ; le shell de l'app et les tuiles
    sont cachés par le Service Worker (Workbox).
 3. Hors réseau : les zones, les aérodromes et la position GPS restent
-   disponibles depuis le cache. Le fond de carte (tuiles OSM en ligne) n'est
-   pas mis en cache et apparaît gris sans connexion.
+   disponibles depuis le cache. Le fond de carte (tuiles OSM) et les labels
+   restent affichés sur les zones **déjà consultées en ligne** (cache progressif
+   du Service Worker + glyphes auto-hébergés) ; les zones jamais visitées
+   apparaissent grises. Pas de pré-téléchargement massif des tuiles (politique
+   d'usage OSM).
 
 ---
 
@@ -155,9 +159,11 @@ Le sous-chemin `/vfr-map-3d/` est géré par `base` dans `vite.config.ts` ; en
 local (`npm run dev`) l'app reste servie à la racine. Aucune clé API n'est
 nécessaire (données bundlées).
 
-> ⚠️ Le fond de carte (tuiles OSM), les polices et les glyphes MapLibre sont
-> chargés en ligne : la carte est pleinement fonctionnelle connectée, mais le
-> fond reste gris hors-ligne (zones, aérodromes et GPS fonctionnent en cache).
+> ℹ️ Les glyphes des labels sont auto-hébergés (`public/fonts/`) → textes carte
+> disponibles hors-ligne. Le fond OSM et les polices d'interface sont chargés en
+> ligne puis mis en cache au fil de la navigation (Service Worker) : l'offline du
+> fond ne couvre que les zones déjà consultées (pas de pré-téléchargement massif,
+> politique d'usage OSM).
 
 ### Self-hosted (Docker, alternative)
 

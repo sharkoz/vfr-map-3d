@@ -35,7 +35,7 @@ export default defineConfig(({ command }) => ({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,pbf}'],
         runtimeCaching: [
           {
             urlPattern: /\.pmtiles$/,
@@ -53,6 +53,34 @@ export default defineConfig(({ command }) => ({
             options: {
               cacheName: 'geojson-cache',
               networkTimeoutSeconds: 5,
+            },
+          },
+          {
+            // Tuiles raster OSM : on met en cache les tuiles déjà affichées → le fond
+            // reste dispo hors-ligne sur les zones consultées en ligne.
+            // (Politique d'usage OSM : pas de pré-téléchargement massif.)
+            urlPattern: /^https:\/\/tile\.openstreetmap\.org\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'osm-tiles-cache',
+              expiration: { maxEntries: 800, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Polices UI Google Fonts — feuille de style
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'google-fonts-stylesheets' },
+          },
+          {
+            // Polices UI Google Fonts — fichiers woff2
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-webfonts',
+              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
             },
           },
         ],

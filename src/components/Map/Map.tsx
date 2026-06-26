@@ -341,7 +341,7 @@ export function Map({ className = '' }: MapProps) {
         layout: {
           'text-field': ['get', 'name'],
           'text-size': ['interpolate', ['linear'], ['zoom'], 9, 10, 13, 13],
-          'text-font': ['Open Sans Regular'],
+          'text-font': ['OpenSans'],
           'text-allow-overlap': false,
           'text-ignore-placement': false,
           'text-anchor': 'center',
@@ -465,7 +465,7 @@ export function Map({ className = '' }: MapProps) {
             ['slice', ['get', 'name'], 0, 12],
           ],
           'text-size': ['interpolate', ['linear'], ['zoom'], 9, 9, 13, 12],
-          'text-font': ['Open Sans Regular'],
+          'text-font': ['OpenSans'],
           'text-anchor': 'top',
           'text-offset': [0, 0.8],
           'text-allow-overlap': false,
@@ -563,7 +563,8 @@ export function Map({ className = '' }: MapProps) {
       container: mapContainerRef.current,
       style: {
         version: 8,
-        glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+        // Glyphes auto-hébergés (offline + indépendant de demotiles). BASE_URL gère le sous-chemin Pages.
+        glyphs: `${import.meta.env.BASE_URL}fonts/{fontstack}/{range}.pbf`,
         sources: {
           osm: {
             type: 'raster',
