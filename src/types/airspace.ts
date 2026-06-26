@@ -80,7 +80,7 @@ export const DEFAULT_FILTERS: AirspaceFilters = {
   showProhibited: true,
   showRestricted: true,
   showDanger: true,
-  showSIV: true,
+  showSIV: false, // masquée par défaut au chargement
   showParachuting: true,
   showOrnithological: true,
   maxAltitude: 5000,

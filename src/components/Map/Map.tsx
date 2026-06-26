@@ -722,30 +722,29 @@ export function Map({ className = '' }: MapProps) {
     const map = mapRef.current
     if (!map || !layersAddedRef.current) return
 
-    // En vue 3D on masque la SIV (encombre la scène extrudée)
-    const excludeSiv = (
+    // On masque la SIV si la couche est décochée OU en vue 3D (encombre la scène
+    // extrudée). Exclusion « dure » par type, appliquée à TOUTES les couches
+    // (remplissage, bordure, label, extrusion, détection de clic) : garantit le
+    // masquage même si une zone SIV recoupait une autre catégorie cochée.
+    const hideSiv = is3D || !filters.showSIV
+    const applySiv = (
       f: maplibregl.FilterSpecification | null,
     ): maplibregl.FilterSpecification | undefined =>
-      is3D && f
+      hideSiv && f
         ? (['all', f, ['!=', ['get', 'type'], 'SIV']] as maplibregl.FilterSpecification)
         : (f ?? undefined)
 
-    // Couches visuelles 2D : filtre type + plafond
+    // Couches type + plafond (fill / line / label / extrusion 3D)
     const visualFilter = buildMapFilter(filters, userCeiling)
-    ;[LAYER_FILL, LAYER_LINE, LAYER_LABEL].forEach((id) => {
-      if (map.getLayer(id)) map.setFilter(id, visualFilter ?? undefined)
+    ;[LAYER_FILL, LAYER_LINE, LAYER_LABEL, LAYER_EXTRUSION].forEach((id) => {
+      if (map.getLayer(id)) map.setFilter(id, applySiv(visualFilter))
     })
 
-    // Couche d'extrusion (vue 3D) : même filtre, mais SIV exclue
-    if (map.getLayer(LAYER_EXTRUSION)) {
-      map.setFilter(LAYER_EXTRUSION, excludeSiv(visualFilter))
-    }
-
     // Couche de détection de clic : filtre type uniquement (pas de plafond)
-    // → 999_999 ft = aucune zone réelle ne dépasse cette altitude ; SIV exclue en 3D
+    // → 999_999 ft = aucune zone réelle ne dépasse cette altitude
     const typeFilter = buildMapFilter(filters, 999_999)
     if (map.getLayer(LAYER_CLICK_TARGET)) {
-      map.setFilter(LAYER_CLICK_TARGET, excludeSiv(typeFilter))
+      map.setFilter(LAYER_CLICK_TARGET, applySiv(typeFilter))
     }
   }, [filters, userCeiling, is3D])
 
