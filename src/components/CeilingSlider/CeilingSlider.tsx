@@ -7,8 +7,9 @@ const CEIL_MAX = 19500
 const STEP = 100
 const AXIS = 16 // position horizontale de l'axe (px depuis le bord gauche)
 
-// Graduations principales (étiquetées) — denses en bas (domaine ULM), espacées en altitude
-const MAJOR_TICKS = [500, 1000, 2000, 3000, 5000, 7500, 10000, 15000, 19500]
+// Graduations principales (étiquetées) — espacées pour éviter le chevauchement
+// des libellés en bas d'échelle (les valeurs intermédiaires restent en mineures)
+const MAJOR_TICKS = [500, 1500, 3000, 5000, 7500, 10000, 15000, 19500]
 const MINOR_TICKS: number[] = []
 for (let v = CEIL_MIN; v <= CEIL_MAX; v += 500) {
   if (!MAJOR_TICKS.includes(v)) MINOR_TICKS.push(v)
