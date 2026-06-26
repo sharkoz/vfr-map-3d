@@ -218,6 +218,27 @@ describe('ZoneStack', () => {
     expect(screen.queryByTestId('hidden-zones-notice')).not.toBeInTheDocument()
   })
 
+  it('affiche les zones au-dessus du plafond au clic sur la notice', async () => {
+    await mockStore([zoneCTR, zoneTMA, zoneG], 500)
+    render(<ZoneStack />)
+    // TMA (plancher 2000 ft) masquée au plafond 500 ft
+    expect(screen.queryByText('TMA AQUITAINE 2.1')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByTestId('hidden-zones-notice'))
+    // Dépliée : la TMA apparaît, avec le compteur total
+    expect(screen.getByText('TMA AQUITAINE 2.1')).toBeInTheDocument()
+    expect(screen.getByText('3 couches à cette position')).toBeInTheDocument()
+  })
+
+  it('replie les zones au-dessus du plafond au second clic', async () => {
+    await mockStore([zoneCTR, zoneTMA, zoneG], 500)
+    render(<ZoneStack />)
+    const notice = screen.getByTestId('hidden-zones-notice')
+    fireEvent.click(notice)
+    expect(screen.getByText('TMA AQUITAINE 2.1')).toBeInTheDocument()
+    fireEvent.click(notice)
+    expect(screen.queryByText('TMA AQUITAINE 2.1')).not.toBeInTheDocument()
+  })
+
   // ── Altitude chart ────────────────────────────────────────────────────────
 
   it('affiche le graphique altitude quand des zones sont visibles', () => {

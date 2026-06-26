@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAppStore } from '@/store'
 import { formatAltitude, getZoneDescription } from '@/utils/zoneDescription'
 import type { AirspaceFeature, AltitudeLimit } from '@/types/airspace'
@@ -54,12 +54,14 @@ function AltitudeChart({
   zoneColors,
   highlightedZoneId,
   onHighlight,
+  ceilingMark,
 }: {
   zones: AirspaceFeature[]
   ceiling: number
   zoneColors: ColorSet[]
   highlightedZoneId: string | null
   onHighlight: (id: string | null) => void
+  ceilingMark?: number
 }) {
   const ticks = getAltTicks(ceiling)
 
@@ -108,6 +110,18 @@ function AltitudeChart({
               style={{ bottom: `${(t / ceiling) * 100}%`, borderTop: '1px solid rgba(42,64,96,0.2)' }}
             />
           ))}
+
+          {/* Repère du plafond utilisateur (visible quand des zones le dépassent) */}
+          {ceilingMark != null && ceilingMark < ceiling && (
+            <div
+              className="absolute left-0 right-0 z-10"
+              style={{ bottom: `${(ceilingMark / ceiling) * 100}%`, borderTop: '1px dashed rgba(240,160,32,0.85)' }}
+            >
+              <span className="absolute font-data" style={{ right: 1, bottom: 1, fontSize: '7px', color: '#f0a020' }}>
+                plafond
+              </span>
+            </div>
+          )}
 
           {/* One column per zone */}
           <div className="absolute inset-0 flex gap-0.5 px-0.5">
@@ -170,6 +184,9 @@ export function ZoneStack() {
   const highlightedZoneId    = useAppStore((s) => s.highlightedZoneId)
   const setHighlightedZoneId = useAppStore((s) => s.setHighlightedZoneId)
 
+  // Déplie les zones situées au-dessus du plafond (au clic sur la notice)
+  const [showAbove, setShowAbove] = useState(false)
+
   const handleClose = () => {
     setZoneStack(null)
     setHighlightedZoneId(null)
@@ -186,6 +203,9 @@ export function ZoneStack() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zoneStack])
 
+  // Chaque nouveau point cliqué replie la vue « au-dessus du plafond »
+  useEffect(() => { setShowAbove(false) }, [zoneStack])
+
   if (!zoneStack || zoneStack.length === 0) return null
 
   // Sort by floor ascending
@@ -196,7 +216,14 @@ export function ZoneStack() {
   const visible     = sorted.filter((z) => toFeet(z.properties.lowerLimit) < userCeiling)
   const hiddenCount = sorted.length - visible.length
 
-  const zoneColors: ColorSet[] = visible.map((zone) => {
+  // Déplié : on affiche aussi les zones dont le plancher dépasse le plafond
+  const displayed = showAbove ? sorted : visible
+  // L'échelle du graphique s'étend pour englober les zones au-dessus du plafond
+  const chartCeiling = showAbove
+    ? displayed.reduce((m, z) => Math.max(m, toFeet(z.properties.upperLimit)), userCeiling)
+    : userCeiling
+
+  const zoneColors: ColorSet[] = displayed.map((zone) => {
     const desc = getZoneDescription(zone.properties.type, zone.properties.class)
     return COLORS[desc.color]
   })
@@ -224,7 +251,7 @@ export function ZoneStack() {
             Espaces aériens
           </h2>
           <p className="font-display text-xs mt-0.5" style={{ color: '#3a5070' }}>
-            {visible.length} couche{visible.length > 1 ? 's' : ''} à cette position
+            {displayed.length} couche{displayed.length > 1 ? 's' : ''} à cette position
           </p>
         </div>
         <button
@@ -240,39 +267,54 @@ export function ZoneStack() {
       </div>
 
       {/* Altitude chart */}
-      {visible.length > 0 && (
+      {displayed.length > 0 && (
         <AltitudeChart
-          zones={visible}
-          ceiling={userCeiling}
+          zones={displayed}
+          ceiling={chartCeiling}
+          ceilingMark={userCeiling}
           zoneColors={zoneColors}
           highlightedZoneId={highlightedZoneId}
           onHighlight={handleHighlight}
         />
       )}
 
-      {/* Hidden zones notice */}
+      {/* Notice des zones au-dessus du plafond — cliquable pour les afficher / masquer */}
       {hiddenCount > 0 && (
-        <p
-          className="px-4 py-1.5 font-display text-xs shrink-0 tracking-wide"
+        <button
+          type="button"
           data-testid="hidden-zones-notice"
+          onClick={() => setShowAbove((v) => !v)}
+          aria-expanded={showAbove}
+          className="px-4 py-1.5 font-display text-xs shrink-0 tracking-wide flex items-center justify-between gap-2 w-full text-left transition-colors"
           style={{
             color: '#f0a020',
-            background: 'rgba(240,160,32,0.06)',
+            background: showAbove ? 'rgba(240,160,32,0.14)' : 'rgba(240,160,32,0.06)',
             borderBottom: '1px solid rgba(240,160,32,0.15)',
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(240,160,32,0.18)')}
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.background = showAbove ? 'rgba(240,160,32,0.14)' : 'rgba(240,160,32,0.06)')
+          }
         >
-          +{hiddenCount} zone{hiddenCount > 1 ? 's' : ''} au-dessus du plafond
-        </p>
+          <span>
+            {showAbove ? '' : '+'}{hiddenCount} zone{hiddenCount > 1 ? 's' : ''} au-dessus du plafond
+          </span>
+          <span className="shrink-0 flex items-center gap-1" aria-hidden>
+            <span style={{ fontSize: '10px', opacity: 0.85 }}>{showAbove ? 'masquer' : 'afficher'}</span>
+            <span style={{ fontSize: '12px' }}>{showAbove ? '▴' : '▾'}</span>
+          </span>
+        </button>
       )}
 
       {/* Zone list */}
       <div className="flex-1 overflow-y-auto scrollbar-dark" data-testid="zone-stack-list">
-        {visible.map((zone, i) => (
+        {displayed.map((zone, i) => (
           <ZoneItem
             key={`${zone.properties.id ?? zone.properties.name}-${i}`}
             zone={zone}
             index={i + 1}
             colors={zoneColors[i]}
+            aboveCeiling={toFeet(zone.properties.lowerLimit) >= userCeiling}
             highlighted={zone.properties.id !== undefined && zone.properties.id === highlightedZoneId}
             onHighlight={() =>
               handleHighlight(
@@ -293,12 +335,14 @@ function ZoneItem({
   index,
   colors,
   highlighted = false,
+  aboveCeiling = false,
   onHighlight,
 }: {
   zone: AirspaceFeature
   index: number
   colors: ColorSet
   highlighted?: boolean
+  aboveCeiling?: boolean
   onHighlight?: () => void
 }) {
   const { name, type, class: cls, lowerLimit, upperLimit, frequency, callsign } = zone.properties
@@ -376,6 +420,22 @@ function ZoneItem({
               }}
             >
               {cls}
+            </span>
+          )}
+          {aboveCeiling && (
+            <span
+              className="shrink-0 font-data px-1.5 py-0.5 rounded"
+              title="Plancher au-dessus de votre plafond carte"
+              style={{
+                fontSize: '8px',
+                fontWeight: 700,
+                background: 'rgba(240,160,32,0.12)',
+                border: '1px solid rgba(240,160,32,0.4)',
+                color: '#f0a020',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              ↑ plafond
             </span>
           )}
         </div>
