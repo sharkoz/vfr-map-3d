@@ -599,7 +599,8 @@ export function Map({ className = '' }: MapProps) {
     publishCenter()
     map.on('move', publishCenter)
 
-    map.addControl(new maplibregl.NavigationControl(), 'bottom-left')
+    // Bas-droite : libère le bord gauche pour le curseur de plafond pleine hauteur
+    map.addControl(new maplibregl.NavigationControl(), 'bottom-right')
     map.addControl(
       new maplibregl.AttributionControl({ compact: true }),
       'bottom-right',

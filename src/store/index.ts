@@ -91,7 +91,7 @@ export const useAppStore = create<AppState>()(
       showAirports: true,
       toggleAirports: () => set((state) => ({ showAirports: !state.showAirports })),
 
-      showPrivateAirports: false,
+      showPrivateAirports: true,
       togglePrivateAirports: () => set((state) => ({ showPrivateAirports: !state.showPrivateAirports })),
 
       zoneStack: null,
@@ -121,7 +121,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'vfr-ulm-settings',
-      version: 1,
+      version: 2,
       // Ne persister que les préférences utilisateur, pas l'état de session.
       // userCeiling n'est PAS persisté : au chargement on repart toujours à 900 ft
       // (vue « décollage », cf. ouverture 3D centrée sur la position).
@@ -131,11 +131,13 @@ export const useAppStore = create<AppState>()(
         showPrivateAirports: state.showPrivateAirports,
         darkMode: state.darkMode,
       }),
-      // v1 : purge un éventuel userCeiling persisté par une version antérieure
+      // v1 : purge un userCeiling persisté par une version antérieure.
+      // v2 : aligne sur le nouveau défaut « terrains privés affichés ».
       migrate: (persisted) => {
         if (persisted && typeof persisted === 'object') {
           const rest = { ...(persisted as Record<string, unknown>) }
           delete rest.userCeiling
+          rest.showPrivateAirports = true
           return rest as unknown as AppState
         }
         return persisted as AppState
