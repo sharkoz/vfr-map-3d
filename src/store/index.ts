@@ -100,7 +100,7 @@ export const useAppStore = create<AppState>()(
       highlightedZoneId: null,
       setHighlightedZoneId: (id) => set({ highlightedZoneId: id }),
 
-      userCeiling: 3500,
+      userCeiling: 100,
       setUserCeiling: (ceiling) => set({ userCeiling: ceiling }),
 
       isOnline: true,
@@ -121,14 +121,25 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'vfr-ulm-settings',
-      // Ne persister que les préférences utilisateur, pas l'état de session
+      version: 1,
+      // Ne persister que les préférences utilisateur, pas l'état de session.
+      // userCeiling n'est PAS persisté : au chargement on repart toujours à 100 ft
+      // (vue « décollage », cf. ouverture 3D centrée sur la position).
       partialize: (state) => ({
         filters: state.filters,
         showAirports: state.showAirports,
         showPrivateAirports: state.showPrivateAirports,
         darkMode: state.darkMode,
-        userCeiling: state.userCeiling,
       }),
+      // v1 : purge un éventuel userCeiling persisté par une version antérieure
+      migrate: (persisted) => {
+        if (persisted && typeof persisted === 'object') {
+          const rest = { ...(persisted as Record<string, unknown>) }
+          delete rest.userCeiling
+          return rest as unknown as AppState
+        }
+        return persisted as AppState
+      },
     },
   ),
 )

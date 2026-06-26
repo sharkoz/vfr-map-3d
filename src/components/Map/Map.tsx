@@ -11,6 +11,8 @@ import { circlePolygon } from '@/utils/geoFormat'
 // France center
 const FRANCE_CENTER: [number, number] = [2.3, 46.6]
 const DEFAULT_ZOOM = 6
+// Vue 3D ouverte par défaut au chargement
+const INITIAL_3D = true
 
 // IDs des couches MapLibre — airspace
 const LAYER_FILL            = 'airspace-fill'
@@ -241,7 +243,9 @@ export function Map({ className = '' }: MapProps) {
   const layersAddedRef = useRef(false)
   const airportLayersAddedRef = useRef(false)
 
-  const [is3D, setIs3D] = useState(false)
+  const [is3D, setIs3D] = useState(INITIAL_3D)
+  const is3DRef = useRef(is3D)
+  const didAutoCenterRef = useRef(false)
 
   const userPosition        = useAppStore((s) => s.userPosition)
   const gpsAccuracy         = useAppStore((s) => s.gpsAccuracy)
@@ -392,6 +396,14 @@ export function Map({ className = '' }: MapProps) {
       map.on('mouseleave', LAYER_FILL, () => {
         map.getCanvas().style.cursor = ''
       })
+
+      // Vue 3D par défaut : afficher l'extrusion et masquer les couches 2D
+      if (is3DRef.current) {
+        map.setLayoutProperty(LAYER_EXTRUSION, 'visibility', 'visible')
+        ;[LAYER_FILL, LAYER_LINE].forEach((id) =>
+          map.setLayoutProperty(id, 'visibility', 'none'),
+        )
+      }
 
       layersAddedRef.current = true
     },
@@ -566,6 +578,8 @@ export function Map({ className = '' }: MapProps) {
       },
       center: FRANCE_CENTER,
       zoom: DEFAULT_ZOOM,
+      pitch: INITIAL_3D ? 60 : 0,
+      bearing: INITIAL_3D ? -15 : 0,
       attributionControl: false,
     })
 
@@ -661,6 +675,9 @@ export function Map({ className = '' }: MapProps) {
     }
   }, [setSelectedAirport, setZoneStack])
 
+  // Garde is3DRef synchronisé pour addAirspaceLayers (callback à deps stables)
+  useEffect(() => { is3DRef.current = is3D }, [is3D])
+
   // --- Chargement des couches airspace quand les données arrivent ---
   useEffect(() => {
     const map = mapRef.current
@@ -704,19 +721,32 @@ export function Map({ className = '' }: MapProps) {
     const map = mapRef.current
     if (!map || !layersAddedRef.current) return
 
-    // Couches visuelles : filtre type + plafond
+    // En vue 3D on masque la SIV (encombre la scène extrudée)
+    const excludeSiv = (
+      f: maplibregl.FilterSpecification | null,
+    ): maplibregl.FilterSpecification | undefined =>
+      is3D && f
+        ? (['all', f, ['!=', ['get', 'type'], 'SIV']] as maplibregl.FilterSpecification)
+        : (f ?? undefined)
+
+    // Couches visuelles 2D : filtre type + plafond
     const visualFilter = buildMapFilter(filters, userCeiling)
-    ;[LAYER_FILL, LAYER_LINE, LAYER_LABEL, LAYER_EXTRUSION].forEach((id) => {
+    ;[LAYER_FILL, LAYER_LINE, LAYER_LABEL].forEach((id) => {
       if (map.getLayer(id)) map.setFilter(id, visualFilter ?? undefined)
     })
 
+    // Couche d'extrusion (vue 3D) : même filtre, mais SIV exclue
+    if (map.getLayer(LAYER_EXTRUSION)) {
+      map.setFilter(LAYER_EXTRUSION, excludeSiv(visualFilter))
+    }
+
     // Couche de détection de clic : filtre type uniquement (pas de plafond)
-    // → 999_999 ft = aucune zone réelle ne dépasse cette altitude
+    // → 999_999 ft = aucune zone réelle ne dépasse cette altitude ; SIV exclue en 3D
     const typeFilter = buildMapFilter(filters, 999_999)
     if (map.getLayer(LAYER_CLICK_TARGET)) {
-      map.setFilter(LAYER_CLICK_TARGET, typeFilter ?? undefined)
+      map.setFilter(LAYER_CLICK_TARGET, excludeSiv(typeFilter))
     }
-  }, [filters, userCeiling])
+  }, [filters, userCeiling, is3D])
 
   // --- Affichage/masquage et filtre des aérodromes ---
   useEffect(() => {
@@ -824,6 +854,15 @@ export function Map({ className = '' }: MapProps) {
     if (map.loaded()) render()
     else map.once('load', render)
   }, [userPosition, gpsAccuracy])
+
+  // --- Recentrage automatique sur la première position GPS reçue ---
+  // (ouverture centrée sur la géoloc au chargement, en complément de la vue 3D)
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !userPosition || didAutoCenterRef.current) return
+    didAutoCenterRef.current = true
+    map.flyTo({ center: userPosition, zoom: 12, duration: 1200 })
+  }, [userPosition])
 
   // --- Marqueur GPS ---
   useEffect(() => {

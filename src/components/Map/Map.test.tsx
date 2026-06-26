@@ -464,16 +464,37 @@ describe('Map', () => {
     expect(screen.getByTestId('gps-center-btn')).toBeDisabled()
   })
 
-  it('affiche le bouton toggle 3D/2D', () => {
+  it('affiche le bouton toggle 3D/2D (vue 3D active par défaut → propose « 2D »)', () => {
     render(<Map />)
     expect(screen.getByTestId('toggle-3d-btn')).toBeInTheDocument()
-    expect(screen.getByTestId('toggle-3d-btn')).toHaveTextContent('3D')
+    expect(screen.getByTestId('toggle-3d-btn')).toHaveTextContent('2D')
   })
 
-  it('bascule en vue 3D au clic : pitch 60°, extrusion visible, fill masqué', () => {
+  it('démarre en 3D : la carte est créée avec pitch 60° / bearing -15°', async () => {
+    const maplibregl = (await import('maplibre-gl')).default
+    render(<Map />)
+    expect(maplibregl.Map).toHaveBeenCalledWith(
+      expect.objectContaining({ pitch: 60, bearing: -15 }),
+    )
+  })
+
+  it('1er clic depuis la 3D par défaut : repasse en 2D (pitch 0°, fill visible)', () => {
     mockGetLayer.mockReturnValue({})
     render(<Map />)
     fireEvent.click(screen.getByTestId('toggle-3d-btn'))
+    expect(mockEaseTo).toHaveBeenCalledWith(
+      expect.objectContaining({ pitch: 0, bearing: 0 }),
+    )
+    expect(mockSetLayoutProperty).toHaveBeenCalledWith('airspace-extrusion', 'visibility', 'none')
+    expect(mockSetLayoutProperty).toHaveBeenCalledWith('airspace-fill', 'visibility', 'visible')
+    expect(mockSetLayoutProperty).toHaveBeenCalledWith('airspace-line', 'visibility', 'visible')
+  })
+
+  it('rebascule en 3D au second clic : pitch 60°, extrusion visible, fill masqué', () => {
+    mockGetLayer.mockReturnValue({})
+    render(<Map />)
+    fireEvent.click(screen.getByTestId('toggle-3d-btn')) // → 2D
+    fireEvent.click(screen.getByTestId('toggle-3d-btn')) // → 3D
     expect(mockEaseTo).toHaveBeenCalledWith(
       expect.objectContaining({ pitch: 60, bearing: -15 }),
     )
@@ -482,19 +503,23 @@ describe('Map', () => {
     expect(mockSetLayoutProperty).toHaveBeenCalledWith('airspace-line', 'visibility', 'none')
   })
 
-  it('revient en vue 2D au second clic : pitch 0°, fill visible, extrusion masquée', () => {
+  it('en vue 3D (défaut), la SIV est exclue de la couche extrusion', async () => {
+    const { useAirspace } = await import('@/hooks/useAirspace')
+    vi.mocked(useAirspace).mockReturnValue({
+      data: mockAirspaceData,
+      loading: false,
+      error: null,
+      reload: vi.fn(),
+    })
     mockGetLayer.mockReturnValue({})
+
     render(<Map />)
-    // Premier clic → 3D
-    fireEvent.click(screen.getByTestId('toggle-3d-btn'))
-    // Second clic → 2D
-    fireEvent.click(screen.getByTestId('toggle-3d-btn'))
-    expect(mockEaseTo).toHaveBeenCalledWith(
-      expect.objectContaining({ pitch: 0, bearing: 0 }),
+
+    const extrusionFilterCall = mockSetFilter.mock.calls.find(
+      ([id]) => id === 'airspace-extrusion',
     )
-    expect(mockSetLayoutProperty).toHaveBeenCalledWith('airspace-extrusion', 'visibility', 'none')
-    expect(mockSetLayoutProperty).toHaveBeenCalledWith('airspace-fill', 'visibility', 'visible')
-    expect(mockSetLayoutProperty).toHaveBeenCalledWith('airspace-line', 'visibility', 'visible')
+    expect(extrusionFilterCall).toBeDefined()
+    expect(JSON.stringify(extrusionFilterCall![1])).toContain('SIV')
   })
 
   it('mode nuit : assombrit le fond OSM et adapte les labels', async () => {
@@ -621,6 +646,33 @@ describe('Map', () => {
     const btn = screen.getByTestId('gps-center-btn')
     expect(btn).not.toBeDisabled()
     fireEvent.click(btn)
+    expect(mockFlyTo).toHaveBeenCalledWith(
+      expect.objectContaining({ center: [2.35, 48.86], zoom: 12 }),
+    )
+  })
+
+  it('recentre automatiquement sur la première position GPS reçue (sans clic)', async () => {
+    const { useAppStore } = await import('@/store')
+    vi.mocked(useAppStore).mockImplementation((selector) =>
+      selector({
+        userPosition: [2.35, 48.86] as [number, number],
+        setSelectedZone: mockSetSelectedZone,
+        setSelectedAirport: mockSetSelectedAirport,
+        setZoneStack: mockSetZoneStack,
+        zoneStack: null,
+        filters: { ...DEFAULT_FILTERS },
+        airspaceLoaded: false,
+        setAirspaceLoaded: vi.fn(),
+        showAirports: true,
+        showPrivateAirports: false,
+        userCeiling: 3500,
+        highlightedZoneId: null,
+        setHighlightedZoneId: mockSetHighlightedZoneId,
+      } as never),
+    )
+
+    render(<Map />)
+
     expect(mockFlyTo).toHaveBeenCalledWith(
       expect.objectContaining({ center: [2.35, 48.86], zoom: 12 }),
     )

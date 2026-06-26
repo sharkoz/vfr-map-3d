@@ -3,6 +3,7 @@ import { ZoneStack } from '@/components/ZoneStack/ZoneStack'
 import { AirportPanel } from '@/components/AirportPanel/AirportPanel'
 import { LayerControl } from '@/components/LayerControl/LayerControl'
 import { HUD } from '@/components/HUD/HUD'
+import { CeilingSlider } from '@/components/CeilingSlider/CeilingSlider'
 
 // Composants lourds chargés en différé (code splitting) :
 // - Map embarque MapLibre GL + PMTiles (~1 Mo) → chunk séparé, chargé après le shell
@@ -256,6 +257,9 @@ export default function App() {
       >
         <Map className="flex-1" />
       </Suspense>
+
+      {/* ── Curseur de plafond (toujours visible, bord gauche) ─────────────── */}
+      <CeilingSlider />
 
       {/* ── HUD mesures (coordonnées centre + cap/vitesse GPS) ─────────────── */}
       <div

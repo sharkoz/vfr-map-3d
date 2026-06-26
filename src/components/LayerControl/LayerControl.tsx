@@ -12,12 +12,6 @@ const LAYER_GROUPS = [
   { key: 'showSIV'        as keyof AirspaceFilters, label: 'SIV',      emoji: '🔵', description: 'Info vol'      },
 ] as const
 
-function ceilingLabel(ft: number): string {
-  if (ft <= 0) return 'Sol'
-  if (ft >= 5500) return `FL${Math.round(ft / 100)}`
-  return `${ft} ft`
-}
-
 const panelStyle: React.CSSProperties = {
   background:    'rgba(10,16,28,0.97)',
   backdropFilter: 'blur(14px)',
@@ -49,10 +43,6 @@ export function LayerControl({ className = '' }: LayerControlProps) {
   const toggleAirports        = useAppStore((s) => s.toggleAirports)
   const showPrivateAirports   = useAppStore((s) => s.showPrivateAirports)
   const togglePrivateAirports = useAppStore((s) => s.togglePrivateAirports)
-  const userCeiling           = useAppStore((s) => s.userCeiling)
-  const setUserCeiling        = useAppStore((s) => s.setUserCeiling)
-
-  const pct = Math.round(((userCeiling - 500) / (19500 - 500)) * 100)
 
   return (
     <div
@@ -132,44 +122,6 @@ export function LayerControl({ className = '' }: LayerControlProps) {
           <span>🔒</span>
           <span>Privés</span>
         </button>
-      </div>
-
-      {/* Ceiling control */}
-      <div
-        className="pt-2.5 mt-0.5"
-        data-testid="ceiling-control"
-        style={{ borderTop: '1px solid rgba(42,68,100,0.3)' }}
-      >
-        <div className="flex items-center justify-between mb-2">
-          <span className="font-display font-semibold text-xs uppercase tracking-[0.12em]" style={{ color: '#3a5070' }}>
-            Plafond carte
-          </span>
-          <span
-            className="font-data font-semibold"
-            style={{ fontSize: '12px', color: '#f0a020' }}
-            data-testid="ceiling-value"
-          >
-            {ceilingLabel(userCeiling)}
-          </span>
-        </div>
-
-        <input
-          type="range"
-          min={500}
-          max={19500}
-          step={500}
-          value={userCeiling}
-          onChange={(e) => setUserCeiling(Number(e.target.value))}
-          className="slider-amber"
-          style={{ '--val': pct } as React.CSSProperties}
-          aria-label="Plafond utilisateur"
-          data-testid="ceiling-slider"
-        />
-
-        <div className="flex justify-between mt-1">
-          <span className="font-data" style={{ fontSize: '9px', color: '#2a4060' }}>500 ft</span>
-          <span className="font-data" style={{ fontSize: '9px', color: '#2a4060' }}>FL195</span>
-        </div>
       </div>
     </div>
   )
