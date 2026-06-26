@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, act } from '@testing-library/react'
 import { Map } from './Map'
 import { DEFAULT_FILTERS } from '@/types/airspace'
 import type { AirspaceCollection } from '@/types/airspace'
@@ -520,6 +520,36 @@ describe('Map', () => {
     )
     expect(extrusionFilterCall).toBeDefined()
     expect(JSON.stringify(extrusionFilterCall![1])).toContain('SIV')
+  })
+
+  it('applique les filtres dès le chargement différé des couches (régression désync SIV)', async () => {
+    const { useAirspace } = await import('@/hooks/useAirspace')
+    vi.mocked(useAirspace).mockReturnValue({
+      data: mockAirspaceData,
+      loading: false,
+      error: null,
+      reload: vi.fn(),
+    })
+    mockGetLayer.mockReturnValue({})
+
+    // Carte pas encore « loaded » au montage → couches ajoutées plus tard via 'load'
+    // (cas réel : les données airspace arrivent avant le load de la carte)
+    mockMapInstance.loaded.mockReturnValue(false)
+    const loadCbs: Array<() => void> = []
+    mockOnce.mockImplementation((event: string, cb: () => void) => {
+      if (event === 'load') loadCbs.push(cb)
+    })
+
+    render(<Map />)
+    await act(async () => {
+      loadCbs.forEach((cb) => cb())
+    })
+
+    // Le filtre doit être appliqué au remplissage SANS interaction (SIV exclue :
+    // décochée par défaut + vue 3D), pas seulement après un toggle manuel.
+    const fillFilterCall = mockSetFilter.mock.calls.find(([id]) => id === 'airspace-fill')
+    expect(fillFilterCall).toBeDefined()
+    expect(JSON.stringify(fillFilterCall![1])).toContain('SIV')
   })
 
   it('mode nuit : assombrit le fond OSM et adapte les labels', async () => {

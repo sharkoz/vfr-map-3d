@@ -246,6 +246,11 @@ export function Map({ className = '' }: MapProps) {
   const [is3D, setIs3D] = useState(INITIAL_3D)
   const is3DRef = useRef(is3D)
   const didAutoCenterRef = useRef(false)
+  // Bascule à true quand les couches sont réellement ajoutées (données chargées) :
+  // déclenche l'application initiale des filtres, même si les données arrivent
+  // après le montage (sinon les couches restent affichées sans filtre).
+  const [layersReady, setLayersReady] = useState(false)
+  const [airportLayersReady, setAirportLayersReady] = useState(false)
 
   const userPosition        = useAppStore((s) => s.userPosition)
   const gpsAccuracy         = useAppStore((s) => s.gpsAccuracy)
@@ -406,6 +411,7 @@ export function Map({ className = '' }: MapProps) {
       }
 
       layersAddedRef.current = true
+      setLayersReady(true)
     },
     [],
   )
@@ -548,6 +554,7 @@ export function Map({ className = '' }: MapProps) {
       })
 
       airportLayersAddedRef.current = true
+      setAirportLayersReady(true)
     },
     [setSelectedAirport, setZoneStack],
   )
@@ -746,7 +753,7 @@ export function Map({ className = '' }: MapProps) {
     if (map.getLayer(LAYER_CLICK_TARGET)) {
       map.setFilter(LAYER_CLICK_TARGET, applySiv(typeFilter))
     }
-  }, [filters, userCeiling, is3D])
+  }, [filters, userCeiling, is3D, layersReady])
 
   // --- Affichage/masquage et filtre des aérodromes ---
   useEffect(() => {
@@ -771,7 +778,7 @@ export function Map({ className = '' }: MapProps) {
         }
       })
     }
-  }, [showAirports, showPrivateAirports])
+  }, [showAirports, showPrivateAirports, airportLayersReady])
 
   // --- Mode nuit : assombrit le fond OSM et renforce le contraste des zones ---
   useEffect(() => {
